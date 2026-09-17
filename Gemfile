@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem "oauth2"
+gem "oauth2", "2.0.22"
 gem "faraday"
 
 group :development do
