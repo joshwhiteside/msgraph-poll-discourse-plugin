@@ -67,15 +67,12 @@ after_initialize do
     end
 
     def poll_mailbox(process_cb)
-      begin
-	#Check if token is initialised before polling
-
         #Initialise token
         self.init_token_from_site_setting()
-        #If token not initialised then don't run this part
+
+        #If token not initialised then don't run the rest of the polling
         unless @token.isblank?
-
-
+	begin
 	  self.refresh_token_if_needed()
 
           msgraph_api =
@@ -91,14 +88,14 @@ after_initialize do
               mime = msgraph_api.get_message_mime(message)
               process_cb.call(mime)
               msgraph_api.delete_message(message)
-            end
           end
+	end
         rescue StandardError => e
-          Rails.logger.error(
-            "Error while polling emails with MsGraph plugin: #{e}"
-          )
+            Rails.logger.error(
+              "Error while polling emails with MsGraph plugin: #{e}"
+            )
+          end
         end
-      end
   end
 
   register_email_poller(::MsGraphEmailPoller.new)
