@@ -45,8 +45,8 @@ after_initialize do
     end
 
     def init_token_from_site_setting
-      if @token.blank?
-         unless SiteSetting.msgraph_polling_oauth2_refresh_token.blank?
+      if @token.nil?
+         unless SiteSetting.msgraph_polling_oauth2_refresh_token.empty?
             @token =
               OAuth2::AccessToken.new(
                 oauth_provider,
