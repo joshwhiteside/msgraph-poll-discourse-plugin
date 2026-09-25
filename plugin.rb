@@ -69,36 +69,57 @@ after_initialize do
     def poll_mailbox(process_cb)
         #Initialise token
         self.init_token_from_site_setting()
+      	begin
+          self.refresh_token_if_needed()
 
-        #If token not initialised then don't run the rest of the polling
-        unless @token.isblank?
-	  begin
-	    self.refresh_token_if_needed()
+          msgraph_api =
+            MsGraphAPI.new(
+            SiteSetting.msgraph_polling_graph_endpoint,
+            SiteSetting.msgraph_polling_mailbox,
+            @token.token
+            )
 
-            msgraph_api =
-              MsGraphAPI.new(
-                SiteSetting.msgraph_polling_graph_endpoint,
-                SiteSetting.msgraph_polling_mailbox,
-                @token.token
-              )
-
-            # To avoid managing paging we get all the emails until there are none remaining
-            while (messages = msgraph_api.get_messages_id).length > 0
-              messages.each do |message|
-                mime = msgraph_api.get_message_mime(message)
-                process_cb.call(mime)
-                msgraph_api.delete_message(message)
-	      end
-            end
-	  end
-          rescue StandardError => e
-              Rails.logger.error(
-                "Error while polling emails with MsGraph plugin: #{e}"
-              )
-          end  
+          # To avoid managing paging we get all the emails until there are none remaining
+          while (messages = msgraph_api.get_messages_id).length > 0
+            messages.each do |message|
+              mime = msgraph_api.get_message_mime(message)
+              process_cb.call(mime)
+              msgraph_api.delete_message(message)
+          end
+        end
+        rescue StandardError => e
+          Rails.logger.error(
+            "Error while polling emails with MsGraph plugin: #{e}"
+          )
         end
     end
+        #If token not initialised then don't run the rest of the polling
+        #unless @token.isblank?
+	#  begin
+	#    self.refresh_token_if_needed()
 
+        #    msgraph_api =
+        #      MsGraphAPI.new(
+        #        SiteSetting.msgraph_polling_graph_endpoint,
+        #        SiteSetting.msgraph_polling_mailbox,
+        #        @token.token
+        #      )
+
+            # To avoid managing paging we get all the emails until there are none remaining
+        #    while (messages = msgraph_api.get_messages_id).length > 0
+        #      messages.each do |message|
+        #        mime = msgraph_api.get_message_mime(message)
+        #        process_cb.call(mime)
+        #        msgraph_api.delete_message(message)
+	#      end
+        #    end
+	#  end
+        #  rescue StandardError => e
+        #      Rails.logger.error(
+        #        "Error while polling emails with MsGraph plugin: #{e}"
+        #      )
+        #  end  
+        #end
   register_email_poller(::MsGraphEmailPoller.new)
 end
 
