@@ -31,7 +31,7 @@ after_initialize do
       #Initialise token
       self.init_token_from_site_setting()
       #If token not initialised then don't run this part
-      unless @token.isblank?
+      unless @token.nil?
 
          begin
            @token = @token.refresh! if self.enabled?
